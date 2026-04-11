@@ -69,5 +69,8 @@ app.get('/api/test', (req, res) => {
 
 // Start Server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on port ${port}`);
 });
+
+// Export for Vercel Serverless
+module.exports = app;
