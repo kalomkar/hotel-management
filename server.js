@@ -67,10 +67,12 @@ app.get('/api/test', (req, res) => {
     res.json({ message: 'Welcome to Basaveshwar Hotel API' });
 });
 
-// Start Server
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+// Start the HTTP server when this file is run directly.
+// When imported by a serverless platform, only export the app.
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+}
 
-// Export for Vercel Serverless
 module.exports = app;
