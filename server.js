@@ -28,10 +28,10 @@ if (!fs.existsSync(uploadDir)) {
 // Set up Multer
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, uploadDir)
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname))
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 const upload = multer({ storage: storage });
@@ -44,7 +44,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     res.json({ imageUrl });
 });
 
-// Routes 
+// Routes
 const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const tableRoutes = require('./routes/tableRoutes');
@@ -53,6 +53,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const billingRoutes = require('./routes/billingRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
@@ -62,6 +63,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/payment', paymentRoutes);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Welcome to Basaveshwar Hotel API' });

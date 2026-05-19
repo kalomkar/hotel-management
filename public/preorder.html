@@ -4,21 +4,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pre-Order Online - Basaveshwar Hotel</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700;800&display=swap"
-        rel="stylesheet">
+    <title>Checkout - Basaveshwar Hotel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/menu.css">
+    <!-- Razorpay SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        .payment-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .payment-btn {
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #eee;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        .payment-btn:hover {
+            border-color: var(--primary);
+            background: #fff9f5;
+        }
+        .payment-btn.active {
+            border-color: var(--primary);
+            background: #fff9f5;
+            box-shadow: 0 4px 15px rgba(230, 81, 0, 0.15);
+        }
+        .btn-pay-online {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+        }
+        .btn-pay-online:hover {
+            background: linear-gradient(135deg, #43A047 0%, #1B5E20 100%);
+            transform: translateY(-2px);
+        }
+        /* Loading Overlay */
+        #loader-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
 
 <body>
+    <!-- Loader -->
+    <div id="loader-overlay">
+        <div class="spinner"></div>
+        <h3 id="loader-text" style="color: #333; font-family: 'Outfit';">Processing Payment...</h3>
+    </div>
 
     <!-- Floating Shapes for Background -->
     <div class="floating-shape" style="width: 300px; height: 300px; top: 10%; left: -5%;"></div>
-    <div class="floating-shape"
-        style="width: 400px; height: 400px; bottom: 10%; right: -5%; background: var(--secondary); opacity: 0.3;"></div>
+    <div class="floating-shape" style="width: 400px; height: 400px; bottom: 10%; right: -5%; background: var(--secondary); opacity: 0.3;"></div>
 
     <!-- Navbar -->
     <nav class="navbar">
@@ -28,8 +91,6 @@
         <ul class="nav-links">
             <li><a href="/">Home</a></li>
             <li><a href="/menu.html">Menu</a></li>
-            <li><a href="/#about">About us</a></li>
-            <li><a href="/#contact">Contact</a></li>
         </ul>
         <a href="/menu.html" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> Back to Menu</a>
     </nav>
@@ -37,53 +98,16 @@
     <!-- Pre-order Section -->
     <div class="preorder-container reveal active" style="margin-top: 120px; margin-bottom: 80px;">
         <div class="menu-header" style="padding-top: 0; text-align: left; margin-bottom: 3rem;">
-            <span class="section-badge">Secure Your Selection</span>
+            <span class="section-badge">Secure Checkout</span>
             <h1 style="font-size: 3.5rem; margin-bottom: 1rem; font-weight: 800;">Finalize Your Order</h1>
-            <p style="font-size: 1.15rem; opacity: 0.8; max-width: 650px; line-height: 1.6;">Review your items and tell
-                us your arrival time. We'll have everything hot and ready the moment you walk in.</p>
-        </div>
-
-        <!-- Benefits Bar -->
-        <div class="preorder-benefits stagger-reveal active"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 4rem; background: #fff; padding: 2.5rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.02);">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div
-                    style="width: 50px; height: 50px; background: rgba(76, 175, 80, 0.1); color: #2E7D32; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                    <i class="fa-solid fa-clock-check"></i>
-                </div>
-                <div>
-                    <h4 style="margin-bottom: 2px;">Zero Wait</h4>
-                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.7;">Table ready on arrival</p>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div
-                    style="width: 50px; height: 50px; background: rgba(230, 81, 0, 0.1); color: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                    <i class="fa-solid fa-bowl-hot"></i>
-                </div>
-                <div>
-                    <h4 style="margin-bottom: 2px;">Hot & Fresh</h4>
-                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.7;">Kitchen to table</p>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div
-                    style="width: 50px; height: 50px; background: rgba(33, 150, 243, 0.1); color: #1565C0; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                    <i class="fa-solid fa-wallet"></i>
-                </div>
-                <div>
-                    <h4 style="margin-bottom: 2px;">Pay at Hotel</h4>
-                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.7;">No advance needed</p>
-                </div>
-            </div>
+            <p style="font-size: 1.15rem; opacity: 0.8; max-width: 650px; line-height: 1.6;">Review your items and complete your payment securely via Razorpay.</p>
         </div>
 
         <div class="preorder-grid stagger-reveal active" style="align-items: flex-start; gap: 3rem;">
             <!-- Cart Items -->
-            <div class="cart-summary-card"
-                style="background: white; padding: 2.5rem; border-radius: 24px; box-shadow: var(--shadow-md); border: 1px solid rgba(0,0,0,0.03);">
+            <div class="cart-summary-card" style="background: white; padding: 2.5rem; border-radius: 24px; box-shadow: var(--shadow-md); border: 1px solid rgba(0,0,0,0.03);">
                 <h3 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 12px; font-weight: 700;">
-                    <i class="fa-solid fa-list-check" style="color: var(--primary);"></i> Order Review
+                    <i class="fa-solid fa-list-check" style="color: var(--primary);"></i> Order Summary
                 </h3>
                 <div id="cart-items-container">
                     <p style="text-align: center; color: #888; padding: 2rem;">Loading your items...</p>
@@ -91,229 +115,309 @@
             </div>
 
             <!-- Checkout Form -->
-            <div class="checkout-form-card"
-                style="background: white; padding: 2.5rem; border-radius: 24px; box-shadow: var(--shadow-md); border: 1px solid rgba(0,0,0,0.03);">
+            <div class="checkout-form-card" style="background: white; padding: 2.5rem; border-radius: 24px; box-shadow: var(--shadow-md); border: 1px solid rgba(0,0,0,0.03);">
                 <h3 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 12px; font-weight: 700;">
-                    <i class="fa-solid fa-id-card-clip" style="color: var(--primary);"></i> Pickup Details
+                    <i class="fa-solid fa-id-card-clip" style="color: var(--primary);"></i> Customer Details
                 </h3>
                 <form id="preorder-form">
                     <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <label for="name"
-                            style="font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; display: block;">Full
-                            Name</label>
-                        <input type="text" id="name" name="name" required placeholder="Enter your full name"
-                            style="width: 100%; padding: 1.1rem; border-radius: 15px; border: 1.5px solid #eee; background: #fafafa; font-size: 1rem;">
+                        <label for="name" style="font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; display: block;">Full Name</label>
+                        <input type="text" id="name" required placeholder="Enter your full name" style="width: 100%; padding: 1.1rem; border-radius: 15px; border: 1.5px solid #eee; background: #fafafa; font-size: 1rem;">
                     </div>
                     <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <label for="mobile"
-                            style="font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; display: block;">Mobile
-                            Number</label>
-                        <input type="tel" id="mobile" name="mobile" required pattern="[0-9]{10}"
-                            placeholder="10-digit mobile number"
-                            style="width: 100%; padding: 1.1rem; border-radius: 15px; border: 1.5px solid #eee; background: #fafafa; font-size: 1rem;">
+                        <label for="mobile" style="font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; display: block;">Mobile Number</label>
+                        <input type="tel" id="mobile" required pattern="[0-9]{10}" placeholder="10-digit mobile number" style="width: 100%; padding: 1.1rem; border-radius: 15px; border: 1.5px solid #eee; background: #fafafa; font-size: 1rem;">
                     </div>
                     <div class="form-group" style="margin-bottom: 2rem;">
-                        <label for="visit_time"
-                            style="font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; display: block;">Arrival
-                            Time</label>
-                        <input type="time" id="visit_time" name="visit_time" required min="06:00" max="21:00"
-                            style="width: 100%; padding: 1.1rem; border-radius: 15px; border: 1.5px solid #eee; background: #fafafa; font-size: 1.1rem;">
-                        <small style="color:#777; margin-top: 8px; display: block;">Kitchen Hours: 6 AM - 9 PM</small>
+                        <label for="visit_time" style="font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; display: block;">Arrival Time</label>
+                        <input type="time" id="visit_time" required min="06:00" max="21:00" style="width: 100%; padding: 1.1rem; border-radius: 15px; border: 1.5px solid #eee; background: #fafafa; font-size: 1.1rem;">
                     </div>
 
-                    <div class="total-banner"
-                        style="background: #FFF3E0; padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; text-align: center; border: 1px dashed var(--primary);">
-                        <span style="font-weight: 600; color: #5D4037;">Total Amount:</span>
-                        <span id="cart-total-price"
-                            style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-left: 10px;">₹0</span>
+                    <div class="total-banner" style="background: #FFF3E0; padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; text-align: center; border: 1px dashed var(--primary);">
+                        <span style="font-weight: 600; color: #5D4037;">Total Amount to Pay:</span>
+                        <span id="cart-total-price" style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-left: 10px;">₹0</span>
                     </div>
 
-                    <button type="submit" class="btn-premium" style="width: 100%; justify-content: center;">
-                        Confirm Order <i class="fa-solid fa-check-circle" style="margin-left: 10px;"></i>
+                    <h4 style="margin-bottom: 15px; font-family: 'Outfit';">Payment Method</h4>
+                    <div class="payment-options">
+                        <button type="button" class="payment-btn active" id="btn-online-pay" onclick="selectPayment('online')">
+                            <i class="fa-solid fa-credit-card" style="color: #1976D2;"></i> Pay Online
+                        </button>
+                        <button type="button" class="payment-btn" id="btn-cash-pay" onclick="selectPayment('cash')">
+                            <i class="fa-solid fa-money-bill-wave" style="color: #388E3C;"></i> Pay at Hotel
+                        </button>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn-premium btn-pay-online" style="width: 100%; justify-content: center; font-size: 1.1rem;">
+                        <i class="fa-solid fa-lock" style="margin-right: 10px;"></i> Pay Securely Now
                     </button>
-                    <p style="font-size: 0.85rem; color: #999; margin-top: 1.5rem; text-align: center;">By placing this
-                        order, you agree to arrive at the specified time.</p>
                 </form>
             </div>
         </div>
     </div>
 
     <!-- Success Modal -->
-    <div id="success-modal"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index:9999; align-items:center; justify-content:center;">
-        <div class="reveal active"
-            style="background:white; padding:4rem; border-radius:24px; text-align:center; max-width:450px; box-shadow:0 25px 50px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
-            <div
-                style="width: 100px; height: 100px; background: rgba(76, 175, 80, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
-                <i class="fa-solid fa-check" style="font-size:3.5rem; color:#4CAF50;"></i>
+    <div id="success-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:4rem; border-radius:24px; text-align:center; max-width:450px;">
+            <div style="width: 100px; height: 100px; background: rgba(76, 175, 80, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+                <i class="fa-solid fa-circle-check" style="font-size:4rem; color:#4CAF50;"></i>
             </div>
-            <h2 style="margin-bottom:1rem; font-size: 2rem; font-weight: 800; color: #3E2723;">Order Received!</h2>
-            <p style="color:#5D4037; margin-bottom:2.5rem; font-size: 1.1rem; line-height: 1.6;">Thank you for your
-                order. We'll have everything ready when you arrive.</p>
-            <button onclick="window.location.href='/'" class="cart-btn" style="margin-inline: auto;">
-                Back to Home <i class="fa-solid fa-house" style="margin-left: 8px;"></i>
-            </button>
+            <h2 style="margin-bottom:1rem; font-size: 2rem; font-weight: 800;">Payment Successful!</h2>
+            <p style="color:#5D4037; margin-bottom:2.5rem; font-size: 1.1rem;">Your order is confirmed. We have received your payment securely.</p>
+            <button onclick="window.location.href='/'" class="btn-premium" style="margin-inline: auto;">Back to Home</button>
         </div>
     </div>
 
-    <!-- Footer Redesign -->
-    <footer>
-        <div class="footer-content stagger-reveal">
-            <div class="footer-col">
-                <div class="nav-brand" style="margin-bottom: 1.5rem; color: white;">
-                    <i class="fa-solid fa-utensils"></i> Basaveshwar Hotel
-                </div>
-                <p>Authentic South Indian pure vegetarian restaurant serving quality food with tradition and love.
-                    Experience the taste of Kalaburagi.</p>
-                <div class="social-links">
-                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
-                </div>
+    <!-- Failed Modal -->
+    <div id="failed-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:4rem; border-radius:24px; text-align:center; max-width:450px;">
+            <div style="width: 100px; height: 100px; background: rgba(244, 67, 54, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+                <i class="fa-solid fa-circle-xmark" style="font-size:4rem; color:#F44336;"></i>
             </div>
-
-            <div class="footer-col links">
-                <h3>Quick Links</h3>
-                <a href="/">Home</a>
-                <a href="/menu.html">Our Menu</a>
-                <a href="/preorder.html">Pre-Order</a>
-                <a href="/admin/login.html">Staff Login</a>
-            </div>
-
-            <div class="footer-col">
-                <h3>Contact Info</h3>
-                <div class="contact-info">
-                    <p><i class="fa-solid fa-location-dot"></i> Kotnoor, Kalaburagi 585106</p>
-                    <p><i class="fa-solid fa-phone"></i> +91 9876543210</p>
-                    <p><i class="fa-solid fa-envelope"></i> info@basaveshwarhotel.com</p>
-                </div>
-            </div>
+            <h2 style="margin-bottom:1rem; font-size: 2rem; font-weight: 800;">Payment Failed</h2>
+            <p style="color:#5D4037; margin-bottom:2.5rem; font-size: 1.1rem;" id="fail-msg">Your transaction could not be completed.</p>
+            <button onclick="closeModals()" class="btn-premium" style="margin-inline: auto; background: #333;">Try Again</button>
         </div>
-
-        <div class="footer-bottom">
-            <p>&copy; 2004 Basaveshwar Hotel. All Rights Reserved. | <a href="/admin/login.html"
-                    style="color: inherit; text-decoration: none; opacity: 0.8;">Staff Access</a></p>
-        </div>
-    </footer>
+    </div>
 
     <script src="/js/main.js"></script>
     <script>
+        let paymentMode = 'online';
+
         document.addEventListener('DOMContentLoaded', () => {
             renderCart();
-
+            
             document.getElementById('preorder-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-
+                
                 const cart = JSON.parse(localStorage.getItem('basaveshwar_cart')) || [];
-                if (cart.length === 0) {
-                    alert('Please add items to your cart first.');
-                    return;
-                }
-
+                if (cart.length === 0) return alert('Your cart is empty.');
+                
                 const total_amount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                
+                const customer_name = document.getElementById('name').value;
+                const customer_mobile = document.getElementById('mobile').value;
+                const visit_time = document.getElementById('visit_time').value;
 
-                const formData = {
-                    customer_name: document.getElementById('name').value,
-                    customer_mobile: document.getElementById('mobile').value,
-                    visit_time: document.getElementById('visit_time').value,
-                    items: cart,
-                    total_amount: total_amount
-                };
-
-                try {
-                    const btn = e.target.querySelector('button');
-                    btn.disabled = true;
-                    btn.innerHTML = 'Placing Order... <i class="fa-solid fa-spinner fa-spin"></i>';
-
-                    const response = await fetch('/api/orders/preorder', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData)
-                    });
-
-                    if (response.ok) {
-                        localStorage.removeItem('basaveshwar_cart');
-                        document.getElementById('success-modal').style.display = 'flex';
-                        if (typeof triggerSuccessFeedback === 'function') {
-                            triggerSuccessFeedback();
-                        }
-                    } else {
-                        throw new Error('Failed to place order');
-                    }
-                } catch (error) {
-                    alert('Error placing order. Please try again.');
-                    e.target.querySelector('button').disabled = false;
-                    e.target.querySelector('button').innerHTML = 'Confirm Pre-Order <i class="fa-solid fa-paper-plane" style="margin-left: 10px;"></i>';
+                if (paymentMode === 'online') {
+                    // Trigger Razorpay Flow
+                    initiateRazorpayPayment({ customer_name, customer_mobile, visit_time, items: cart, total_amount });
+                } else {
+                    // Cash on Delivery Flow
+                    placeCashOrder({ customer_name, customer_mobile, visit_time, items: cart, total_amount });
                 }
             });
         });
 
+        function selectPayment(mode) {
+            paymentMode = mode;
+            document.getElementById('btn-online-pay').classList.remove('active');
+            document.getElementById('btn-cash-pay').classList.remove('active');
+            
+            const submitBtn = document.getElementById('submit-btn');
+
+            if(mode === 'online') {
+                document.getElementById('btn-online-pay').classList.add('active');
+                submitBtn.innerHTML = '<i class="fa-solid fa-lock" style="margin-right: 10px;"></i> Pay Securely Now';
+                submitBtn.className = 'btn-premium btn-pay-online';
+            } else {
+                document.getElementById('btn-cash-pay').classList.add('active');
+                submitBtn.innerHTML = 'Confirm Order (Pay at Hotel)';
+                submitBtn.className = 'btn-premium';
+                submitBtn.style.background = 'var(--primary)';
+            }
+        }
+
+        async function initiateRazorpayPayment(orderData) {
+            showLoader("Initializing Secure Payment...");
+            
+            try {
+                // 1. Create order on backend
+                const response = await fetch('/api/payment/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+                
+                hideLoader();
+
+                if (!response.ok) {
+                    let errMsg = 'Failed to create payment order.';
+                    try {
+                        const errData = await response.json();
+                        errMsg = errData.message || errMsg;
+                    } catch(e) {
+                        errMsg = `Server error (${response.status}). Please make sure you restarted the Node server.`;
+                    }
+                    throw new Error(errMsg);
+                }
+
+                const data = await response.json();
+
+                // 2. Open Razorpay Checkout
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: "Basaveshwar Hotel",
+                    description: "Order Payment (Test Mode)",
+                    image: "/images/logo.png",
+                    order_id: data.razorpay_order_id,
+                    handler: async function (response) {
+                        // 3. Verify Payment
+                        verifyPaymentSignature(response, data.hotel_order_id);
+                    },
+                    prefill: {
+                        name: data.customer_name,
+                        contact: data.customer_mobile
+                    },
+                    theme: {
+                        color: "#E65100" // Brand Primary Color
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            console.log("Payment modal closed");
+                            // Payment cancelled by user
+                            handlePaymentFailure(data.hotel_order_id, data.razorpay_order_id, "User cancelled the payment.");
+                        }
+                    }
+                };
+                
+                const rzp = new Razorpay(options);
+                
+                rzp.on('payment.failed', function (response){
+                    handlePaymentFailure(data.hotel_order_id, response.error.metadata.order_id, response.error.description);
+                });
+
+                rzp.open();
+                
+            } catch (err) {
+                hideLoader();
+                alert('Error starting payment: ' + err.message);
+            }
+        }
+
+        async function verifyPaymentSignature(rzpResponse, hotelOrderId) {
+            showLoader("Verifying Payment...");
+            try {
+                const res = await fetch('/api/payment/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                        razorpay_order_id: rzpResponse.razorpay_order_id,
+                        razorpay_signature: rzpResponse.razorpay_signature,
+                        hotel_order_id: hotelOrderId
+                    })
+                });
+                
+                const data = await res.json();
+                hideLoader();
+                
+                if (data.success) {
+                    localStorage.removeItem('basaveshwar_cart');
+                    document.getElementById('success-modal').style.display = 'flex';
+                } else {
+                    showFailedModal(data.message);
+                }
+            } catch (error) {
+                hideLoader();
+                showFailedModal("Verification error. If money was deducted, contact support.");
+            }
+        }
+
+        async function handlePaymentFailure(hotelOrderId, rzpOrderId, description) {
+            try {
+                await fetch('/api/payment/failure', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        hotel_order_id: hotelOrderId,
+                        razorpay_order_id: rzpOrderId,
+                        error_description: description
+                    })
+                });
+                showFailedModal(description || "Payment failed or was cancelled.");
+            } catch (e) {
+                showFailedModal("Payment failed.");
+            }
+        }
+
+        // --- Original Cash Flow fallback ---
+        async function placeCashOrder(orderData) {
+            showLoader("Placing Order...");
+            try {
+                const response = await fetch('/api/orders/preorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+                
+                hideLoader();
+                if (response.ok) {
+                    localStorage.removeItem('basaveshwar_cart');
+                    document.getElementById('success-modal').querySelector('h2').innerText = "Order Received!";
+                    document.getElementById('success-modal').querySelector('p').innerText = "We'll have everything ready when you arrive.";
+                    document.getElementById('success-modal').style.display = 'flex';
+                } else {
+                    throw new Error('Failed to place order');
+                }
+            } catch (error) {
+                hideLoader();
+                alert('Error placing order.');
+            }
+        }
+
+        // UI Helpers
+        function showLoader(msg) {
+            document.getElementById('loader-text').innerText = msg;
+            document.getElementById('loader-overlay').style.display = 'flex';
+        }
+        function hideLoader() {
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
+        function showFailedModal(msg) {
+            document.getElementById('fail-msg').innerText = msg;
+            document.getElementById('failed-modal').style.display = 'flex';
+        }
+        function closeModals() {
+            document.getElementById('failed-modal').style.display = 'none';
+            document.getElementById('success-modal').style.display = 'none';
+        }
+
+        // Cart Rendering
         function renderCart() {
             const container = document.getElementById('cart-items-container');
             const cart = JSON.parse(localStorage.getItem('basaveshwar_cart')) || [];
-
+            
             if (cart.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center; color:#888; padding:3rem 0;">
-                        <i class="fa-solid fa-shopping-basket" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                        <p>Your cart is empty.</p>
-                        <a href="/menu.html" class="nav-btn" style="display:inline-block; margin-top: 1rem;">View Menu</a>
-                    </div>`;
+                container.innerHTML = `<p style="text-align:center;">Cart is empty.</p>`;
                 document.getElementById('cart-total-price').innerText = '₹0';
-                document.getElementById('preorder-form').querySelector('button').disabled = true;
+                document.getElementById('submit-btn').disabled = true;
                 return;
             }
-
-            document.getElementById('preorder-form').querySelector('button').disabled = false;
-            let html = '';
-            let total = 0;
-
+            
+            document.getElementById('submit-btn').disabled = false;
+            let html = '', total = 0;
+            
             cart.forEach(item => {
                 total += item.price * item.quantity;
                 html += `
-                    <div class="cart-item reveal active">
-                        <div class="cart-item-info">
-                            <img src="${item.image || 'https://via.placeholder.com/400x300?text=Basaveshwar+Hotel'}" alt="${item.name}" class="cart-item-img" onerror="this.src='https://via.placeholder.com/400x300?text=Basaveshwar+Hotel'">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid #eee;">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <img src="${item.image || '/images/placeholder.jpg'}" style="width:60px; height:60px; border-radius:10px; object-fit:cover;">
                             <div>
-                                <h4 style="margin-bottom:0.2rem; font-size: 1.1rem; color: #3E2723;">${item.name}</h4>
-                                <div style="color:var(--primary); font-weight:700;">₹${item.price}</div>
+                                <h4 style="margin:0;">${item.name}</h4>
+                                <span style="color:#666; font-size:0.9rem;">₹${item.price} x ${item.quantity}</span>
                             </div>
                         </div>
-                        <div class="qty-controls">
-                            <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
-                            <span style="font-weight:700; width:20px; text-align:center; color: #3E2723;">${item.quantity}</span>
-                            <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
-                            <button class="qty-btn delete-btn" onclick="removeFromCart(${item.id})"><i class="fa-solid fa-trash"></i></button>
-                        </div>
+                        <div style="font-weight:bold;">₹${item.price * item.quantity}</div>
                     </div>
                 `;
             });
-
             container.innerHTML = html;
             document.getElementById('cart-total-price').innerText = `₹${total}`;
         }
-
-        function updateQuantity(id, delta) {
-            let cart = JSON.parse(localStorage.getItem('basaveshwar_cart')) || [];
-            const item = cart.find(i => i.id === id);
-
-            if (item) {
-                item.quantity += delta;
-                if (item.quantity <= 0) {
-                    cart = cart.filter(i => i.id !== id);
-                }
-                localStorage.setItem('basaveshwar_cart', JSON.stringify(cart));
-                renderCart();
-            }
-        }
-
-        function removeFromCart(id) {
-            let cart = JSON.parse(localStorage.getItem('basaveshwar_cart')) || [];
-            cart = cart.filter(i => i.id !== id);
-            localStorage.setItem('basaveshwar_cart', JSON.stringify(cart));
-            renderCart();
-        }
     </script>
 </body>
-
 </html>

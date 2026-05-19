@@ -14,7 +14,10 @@ exports.processPayment = async (req, res) => {
         const orderId = req.params.orderId;
         const { payment_mode, discount = 0 } = req.body;
 
-        if (!['Cash', 'UPI'].includes(payment_mode)) {
+        let mode = payment_mode;
+        if (mode === 'UPI') mode = 'Manual UPI';
+
+        if (!['Cash', 'Manual UPI', 'Card Swipe'].includes(mode)) {
             return res.status(400).json({ message: 'Invalid payment mode' });
         }
 
@@ -27,8 +30,8 @@ exports.processPayment = async (req, res) => {
 
         // 2. Insert Payment
         await connection.query(
-            'INSERT INTO payments (order_id, amount, payment_mode, status) VALUES (?, ?, ?, ?)',
-            [orderId, finalAmount, payment_mode, 'Success']
+            'INSERT INTO payments (order_id, amount, payment_mode, status, payment_type, cashier_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [orderId, finalAmount, mode, 'Success', 'Offline', req.user.id]
         );
 
         // 3. Update Order Status

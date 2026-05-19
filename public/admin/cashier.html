@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cashier Dashboard - Basaveshwar Hotel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css">
     <style>
@@ -117,12 +117,57 @@
             cursor: pointer;
             transition: 0.3s;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .pay-btn.selected {
             border-color: var(--admin-primary);
             background: #e3f2fd;
             color: var(--admin-primary);
+        }
+
+        .sidebar-menu li a {
+            cursor: pointer;
+        }
+
+        /* Status badges */
+        .status-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pill.success {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        .status-pill.pending {
+            background: #FFF3E0;
+            color: #EF6C00;
+        }
+        .status-pill.failed {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+        .type-pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .type-pill.online {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+        .type-pill.offline {
+            background: #ECEFF1;
+            color: #37474F;
         }
     </style>
 </head>
@@ -136,8 +181,8 @@
                 <h3><i class="fa-solid fa-utensils"></i> Basaveshwar</h3>
             </div>
             <ul class="sidebar-menu">
-                <li><a href="cashier.html" class="active"><i class="fa-solid fa-file-invoice"></i> Pending Orders</a>
-                </li>
+                <li><a onclick="switchTab('pending')" id="tab-pending" class="active"><i class="fa-solid fa-file-invoice"></i> Pending Orders</a></li>
+                <li><a onclick="switchTab('payments')" id="tab-payments"><i class="fa-solid fa-indian-rupee-sign"></i> Payments History</a></li>
             </ul>
         </aside>
 
@@ -147,23 +192,103 @@
                 <div class="user-info">
                     <i class="fa-solid fa-user-tie"></i>
                     <span id="user-name">Cashier</span>
-                    <span class="status-badge status-primary" id="user-role"
-                        style="background:#e3f2fd; color:#1565C0;">Cashier</span>
+                    <span class="status-badge status-primary" id="user-role" style="background:#e3f2fd; color:#1565C0;">Cashier</span>
                 </div>
                 <div>
-                    <button class="btn btn-primary" onclick="handleAttendance('clock-in')" id="btn-clock-in">Clock
-                        In</button>
-                    <button class="btn btn-danger" onclick="handleAttendance('clock-out')" id="btn-clock-out"
-                        style="display:none">Clock Out</button>
-                    <button class="btn-logout" onclick="logout()" style="margin-left:15px;"><i
-                            class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                    <button class="btn btn-primary" onclick="handleAttendance('clock-in')" id="btn-clock-in">Clock In</button>
+                    <button class="btn btn-danger" onclick="handleAttendance('clock-out')" id="btn-clock-out" style="display:none">Clock Out</button>
+                    <button class="btn-logout" onclick="logout()" style="margin-left:15px;"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
                 </div>
             </div>
 
-            <div class="content-area">
+            <!-- TAB 1: PENDING ORDERS -->
+            <div class="content-area" id="pending-section">
                 <h2 class="card-title">Pending Orders to Bill</h2>
                 <div class="grid-4" id="orders-container">
                     <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- TAB 2: PAYMENTS HISTORY -->
+            <div class="content-area" id="payments-section" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 class="card-title" style="margin: 0; font-family: 'Outfit'; font-weight: 800;">Payments & Revenue Dashboard</h2>
+                    <button class="btn btn-primary" onclick="loadPaymentsHistory()"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                </div>
+
+                <!-- Stats Summary Row -->
+                <div class="grid-4" style="margin-bottom: 2.5rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                    <div style="background: white; padding: 1.5rem; border-radius: 16px; box-shadow: var(--shadow); border-left: 5px solid #37474F; display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 2.5rem; color: #37474F; opacity: 0.8;"><i class="fa-solid fa-money-bill-wave"></i></div>
+                        <div>
+                            <span style="font-size: 0.9rem; color: #888; display: block; font-weight: 500;">Daily Offline Revenue</span>
+                            <strong style="font-size: 1.6rem; font-family: 'Outfit';" id="stat-daily-offline">₹0</strong>
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 1.5rem; border-radius: 16px; box-shadow: var(--shadow); border-left: 5px solid #1565C0; display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 2.5rem; color: #1565C0; opacity: 0.8;"><i class="fa-solid fa-credit-card"></i></div>
+                        <div>
+                            <span style="font-size: 0.9rem; color: #888; display: block; font-weight: 500;">Daily Online Revenue</span>
+                            <strong style="font-size: 1.6rem; font-family: 'Outfit';" id="stat-daily-online">₹0</strong>
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 1.5rem; border-radius: 16px; box-shadow: var(--shadow); border-left: 5px solid #2E7D32; display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 2.5rem; color: #2E7D32; opacity: 0.8;"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        <div>
+                            <span style="font-size: 0.9rem; color: #888; display: block; font-weight: 500;">Total Revenue (Today)</span>
+                            <strong style="font-size: 1.6rem; font-family: 'Outfit'; color: #2E7D32;" id="stat-daily-revenue">₹0</strong>
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 1.5rem; border-radius: 16px; box-shadow: var(--shadow); border-left: 5px solid #EF6C00; display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 2.5rem; color: #EF6C00; opacity: 0.8;"><i class="fa-solid fa-receipt"></i></div>
+                        <div>
+                            <span style="font-size: 0.9rem; color: #888; display: block; font-weight: 500;">Transactions (Today)</span>
+                            <strong style="font-size: 1.6rem; font-family: 'Outfit';" id="stat-total-transactions">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters & Search -->
+                <div style="background: white; padding: 1.5rem; border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                    <div style="flex: 1; min-width: 250px; position: relative;">
+                        <input type="text" id="search-input" oninput="applyFilters()" placeholder="Search by Order ID, Customer, Payment ID..." style="width: 100%; padding: 0.8rem 1rem 0.8rem 2.5rem; border-radius: 8px; border: 1.5px solid #ddd; font-size: 0.95rem;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888;"></i>
+                    </div>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <select id="filter-type" onchange="applyFilters()" style="padding: 0.8rem; border-radius: 8px; border: 1.5px solid #ddd; font-size: 0.95rem; font-weight: 500;">
+                            <option value="all">All Types (Online/Offline)</option>
+                            <option value="Online">Online Payments</option>
+                            <option value="Offline">Offline Payments</option>
+                        </select>
+                        <select id="filter-status" onchange="applyFilters()" style="padding: 0.8rem; border-radius: 8px; border: 1.5px solid #ddd; font-size: 0.95rem; font-weight: 500;">
+                            <option value="all">All Statuses</option>
+                            <option value="Success">Success</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Failed">Failed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- History Table Card -->
+                <div style="background: white; border-radius: 16px; box-shadow: var(--shadow); overflow-x: auto; border: 1px solid rgba(0,0,0,0.03);">
+                    <table class="admin-table" style="margin: 0; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Order ID</th>
+                                <th>Customer Name</th>
+                                <th>Table</th>
+                                <th>Type</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Amount</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payments-history-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>
@@ -173,8 +298,7 @@
     <div class="modal" id="billModal">
         <div class="modal-content">
             <button class="btn-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-            <h2 style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #eee;">Settle Bill #<span
-                    id="bill-id"></span></h2>
+            <h2 style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #eee;">Settle Bill #<span id="bill-id"></span></h2>
 
             <div id="bill-details" style="margin-bottom:1rem; color:#666;">
                 <!-- Info populated dynamically -->
@@ -200,8 +324,7 @@
                 </div>
                 <div class="calc-row" style="align-items:center;">
                     <span>Discount (Rs):</span>
-                    <input type="number" id="bill-discount" value="0" min="0" onchange="calculateFinal()"
-                        style="width:80px; padding:0.3rem; text-align:right;">
+                    <input type="number" id="bill-discount" value="0" min="0" onchange="calculateFinal()" style="width:80px; padding:0.3rem; text-align:right;">
                 </div>
                 <div class="calc-row final">
                     <span>Payable Amount:</span>
@@ -210,30 +333,137 @@
             </div>
 
             <h3 style="margin-top:2rem;">Payment Mode</h3>
-            <div class="pay-mode">
-                <button class="pay-btn selected" id="btn-cash" onclick="selectPayMode('Cash')"><i
-                        class="fa-solid fa-money-bill"></i> Cash</button>
-                <button class="pay-btn" id="btn-upi" onclick="selectPayMode('UPI')"><i class="fa-solid fa-qrcode"></i>
-                    UPI</button>
+            <div class="pay-mode" style="display: flex; gap: 10px;">
+                <button type="button" class="pay-btn selected" id="btn-cash" onclick="selectPayMode('Cash')">
+                    <i class="fa-solid fa-money-bill-wave" style="color: #388E3C;"></i> Cash
+                </button>
+                <button type="button" class="pay-btn" id="btn-manual-upi" onclick="selectPayMode('Manual UPI')">
+                    <i class="fa-solid fa-qrcode" style="color: #1976D2;"></i> Manual UPI
+                </button>
+                <button type="button" class="pay-btn" id="btn-card-swipe" onclick="selectPayMode('Card Swipe')">
+                    <i class="fa-solid fa-credit-card" style="color: #FF9800;"></i> Card Swipe
+                </button>
             </div>
 
-            <button class="btn btn-success" style="width:100%; padding:1.2rem; font-size:1.1rem; margin-top:2rem;"
-                onclick="processPayment()">Complete Payment & Print</button>
+            <button class="btn btn-success" style="width:100%; padding:1.2rem; font-size:1.1rem; margin-top:2rem;" onclick="processPayment()">Complete Payment & Print</button>
+        </div>
+    </div>
+
+    <!-- Payment Details Popup Modal -->
+    <div class="modal" id="paymentDetailsModal">
+        <div class="modal-content" style="max-width: 500px; border-radius: 20px;">
+            <button class="btn-close" onclick="closeDetailsModal()"><i class="fa-solid fa-xmark"></i></button>
+            <h2 style="margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px solid #eee; font-family: 'Outfit'; font-weight: 700;">Payment Details</h2>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 2rem; font-size: 0.95rem;">
+                <div>
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Payment ID</span>
+                    <strong id="det-pay-id">-</strong>
+                </div>
+                <div>
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Order ID</span>
+                    <strong id="det-order-id">-</strong>
+                </div>
+                <div>
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Customer Name</span>
+                    <strong id="det-customer">-</strong>
+                </div>
+                <div>
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Table / Order Type</span>
+                    <strong id="det-table">-</strong>
+                </div>
+                <div>
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Payment Mode</span>
+                    <strong id="det-mode">-</strong>
+                </div>
+                <div>
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Payment Type</span>
+                    <strong id="det-type">-</strong>
+                </div>
+                <div>
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Payment Status</span>
+                    <strong id="det-status">-</strong>
+                </div>
+                <div>
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Date & Time</span>
+                    <strong id="det-date">-</strong>
+                </div>
+                <div style="grid-column: 1 / -1; display: none;" id="det-rzp-row">
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Razorpay Payment ID</span>
+                    <strong id="det-rzp-id" style="word-break: break-all; color: #1565C0;">-</strong>
+                </div>
+                <div style="grid-column: 1 / -1; display: none;" id="det-cashier-row">
+                    <span style="color: #888; display: block; font-size: 0.8rem; text-transform: uppercase;">Settled By (Cashier)</span>
+                    <strong id="det-cashier">-</strong>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 1rem; font-family: 'Outfit'; border-top: 1px solid #eee; padding-top: 1rem;">Ordered Items</h3>
+            <table class="admin-table" style="margin-bottom: 1.5rem; font-size: 0.9rem;">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th style="text-align: center;">Qty</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="det-items-tbody">
+                    <!-- Items -->
+                </tbody>
+            </table>
+
+            <div style="background: #f8f9fa; padding: 1.2rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <span style="font-weight: 600;">Total Paid Amount</span>
+                <span id="det-total-paid" style="font-size: 1.4rem; font-weight: 800; color: var(--admin-primary);">₹0</span>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" style="flex: 1;" id="det-print-btn"><i class="fa-solid fa-print"></i> Print Receipt</button>
+                <button class="btn btn-secondary" style="flex: 1; border: 1.5px solid #ccc; color: #333; background: white;" onclick="closeDetailsModal()">Close</button>
+            </div>
         </div>
     </div>
 
     <script src="js/admin.js"></script>
     <script>
         let pendingOrders = [];
+        let allPayments = [];
         let currentBill = null;
         let selectedPayMode = 'Cash';
+        let refreshInterval = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadPendingOrders();
-            // Automatically refresh every 30 seconds
-            setInterval(loadPendingOrders, 30000);
+            // Automatically refresh pending orders every 30 seconds
+            refreshInterval = setInterval(() => {
+                if (document.getElementById('pending-section').style.display !== 'none') {
+                    loadPendingOrders();
+                } else {
+                    loadPaymentsHistory();
+                }
+            }, 30000);
         });
 
+        // Tab Switching
+        function switchTab(tab) {
+            document.getElementById('tab-pending').classList.remove('active');
+            document.getElementById('tab-payments').classList.remove('active');
+            
+            document.getElementById('pending-section').style.display = 'none';
+            document.getElementById('payments-section').style.display = 'none';
+
+            if (tab === 'pending') {
+                document.getElementById('tab-pending').classList.add('active');
+                document.getElementById('pending-section').style.display = 'block';
+                loadPendingOrders();
+            } else {
+                document.getElementById('tab-payments').classList.add('active');
+                document.getElementById('payments-section').style.display = 'block';
+                loadPaymentsHistory();
+            }
+        }
+
+        // --- Tab 1: Pending Orders ---
         async function loadPendingOrders() {
             try {
                 const res = await apiCall('/api/orders/pending');
@@ -333,10 +563,12 @@
         function selectPayMode(mode) {
             selectedPayMode = mode;
             document.getElementById('btn-cash').classList.remove('selected');
-            document.getElementById('btn-upi').classList.remove('selected');
+            document.getElementById('btn-manual-upi').classList.remove('selected');
+            document.getElementById('btn-card-swipe').classList.remove('selected');
 
             if (mode === 'Cash') document.getElementById('btn-cash').classList.add('selected');
-            else document.getElementById('btn-upi').classList.add('selected');
+            else if (mode === 'Manual UPI') document.getElementById('btn-manual-upi').classList.add('selected');
+            else if (mode === 'Card Swipe') document.getElementById('btn-card-swipe').classList.add('selected');
         }
 
         async function processPayment() {
@@ -368,6 +600,190 @@
             }
         }
 
+        // --- Tab 2: Payments History & Dashboard ---
+        async function loadPaymentsHistory() {
+            try {
+                const res = await apiCall('/api/payment/history');
+                if (res.ok) {
+                    allPayments = res.data;
+                    calculateAnalytics();
+                    applyFilters();
+                }
+            } catch (e) {
+                console.error('Failed to load payment history', e);
+            }
+        }
+
+        function calculateAnalytics() {
+            const todayStr = new Date().toDateString();
+            
+            let dailyOffline = 0;
+            let dailyOnline = 0;
+            let transactionCount = 0;
+
+            allPayments.forEach(p => {
+                const payDate = new Date(p.payment_date);
+                if (payDate.toDateString() === todayStr && p.payment_status === 'Success') {
+                    transactionCount++;
+                    const amt = parseFloat(p.paid_amount) || 0;
+                    if (p.payment_type === 'Offline') {
+                        dailyOffline += amt;
+                    } else {
+                        dailyOnline += amt;
+                    }
+                }
+            });
+
+            document.getElementById('stat-daily-offline').innerText = `₹${dailyOffline.toFixed(2)}`;
+            document.getElementById('stat-daily-online').innerText = `₹${dailyOnline.toFixed(2)}`;
+            document.getElementById('stat-daily-revenue').innerText = `₹${(dailyOffline + dailyOnline).toFixed(2)}`;
+            document.getElementById('stat-total-transactions').innerText = transactionCount;
+        }
+
+        function applyFilters() {
+            const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+            const typeFilter = document.getElementById('filter-type').value;
+            const statusFilter = document.getElementById('filter-status').value;
+
+            const tbody = document.getElementById('payments-history-tbody');
+            tbody.innerHTML = '';
+
+            const filtered = allPayments.filter(p => {
+                // Search filter
+                const matchesSearch = !searchVal || 
+                    p.order_id.toString().includes(searchVal) ||
+                    (p.customer_name && p.customer_name.toLowerCase().includes(searchVal)) ||
+                    (p.razorpay_payment_id && p.razorpay_payment_id.toLowerCase().includes(searchVal)) ||
+                    (p.payment_id && p.payment_id.toString().includes(searchVal));
+
+                // Type filter
+                const matchesType = typeFilter === 'all' || p.payment_type === typeFilter;
+
+                // Status filter
+                const matchesStatus = statusFilter === 'all' || p.payment_status === statusFilter;
+
+                return matchesSearch && matchesType && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:2rem; color:#888;">No matching transactions found.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(p => {
+                const date = new Date(p.payment_date).toLocaleString('en-IN', {
+                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                });
+                
+                const typeClass = p.payment_type === 'Online' ? 'online' : 'offline';
+                const statusClass = p.payment_status === 'Success' ? 'success' : 
+                                    p.payment_status === 'Pending' ? 'pending' : 'failed';
+
+                // String escape for safety in onclick
+                const customerEscaped = p.customer_name ? p.customer_name.replace(/'/g, "\\'") : '';
+                const tableEscaped = p.table_number ? p.table_number : '';
+                const rzpId = p.razorpay_payment_id ? p.razorpay_payment_id : '';
+                const cashier = p.cashier_name ? p.cashier_name.replace(/'/g, "\\'") : '';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${date}</td>
+                        <td><strong>#${p.order_id}</strong></td>
+                        <td>${p.customer_name || '<span style="color:#aaa;">Walk-in</span>'}</td>
+                        <td>${p.table_number ? `Table ${p.table_number}` : p.order_type}</td>
+                        <td><span class="type-pill ${typeClass}">${p.payment_type}</span></td>
+                        <td><strong>${p.payment_mode}</strong></td>
+                        <td><span class="status-pill ${statusClass}">${p.payment_status}</span></td>
+                        <td style="text-align: right; font-weight: 600; color:#333;">₹${p.paid_amount}</td>
+                        <td style="text-align: center;">
+                            <div style="display: flex; gap: 5px; justify-content: center;">
+                                <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="openPaymentDetails(${p.order_id}, ${p.payment_id}, '${customerEscaped}', '${tableEscaped}', '${p.order_type}', '${p.payment_mode}', '${p.payment_type}', '${p.payment_status}', '${date}', '${rzpId}', '${cashier}', ${p.paid_amount})"><i class="fa-solid fa-eye"></i> View</button>
+                                <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; border:1px solid #ccc; background: white; color: #333;" onclick="printReceipt(${p.order_id})"><i class="fa-solid fa-print"></i> Receipt</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Details Modal
+        async function openPaymentDetails(orderId, paymentId, customerName, tableNum, orderType, paymentMode, paymentType, paymentStatus, paymentDate, razorpayPaymentId, cashierName, paidAmount) {
+            document.getElementById('det-pay-id').innerText = `#${paymentId}`;
+            document.getElementById('det-order-id').innerText = `#${orderId}`;
+            document.getElementById('det-customer').innerText = customerName || 'Walk-in Customer';
+            document.getElementById('det-table').innerText = tableNum ? `Table ${tableNum}` : orderType;
+            document.getElementById('det-mode').innerText = paymentMode;
+            document.getElementById('det-type').innerText = paymentType;
+            document.getElementById('det-status').innerText = paymentStatus;
+            document.getElementById('det-date').innerText = paymentDate;
+            document.getElementById('det-total-paid').innerText = `₹${paidAmount}`;
+
+            // Handle Razorpay ID block
+            const rzpRow = document.getElementById('det-rzp-row');
+            if (paymentType === 'Online' && razorpayPaymentId) {
+                document.getElementById('det-rzp-id').innerText = razorpayPaymentId;
+                rzpRow.style.display = 'block';
+            } else {
+                rzpRow.style.display = 'none';
+            }
+
+            // Handle Cashier Name block
+            const cashierRow = document.getElementById('det-cashier-row');
+            if (paymentType === 'Offline' && cashierName) {
+                document.getElementById('det-cashier').innerText = cashierName;
+                cashierRow.style.display = 'block';
+            } else {
+                cashierRow.style.display = 'none';
+            }
+
+            // Setup print button
+            document.getElementById('det-print-btn').onclick = function() { printReceipt(orderId); };
+
+            // Load items
+            const itemsTbody = document.getElementById('det-items-tbody');
+            itemsTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:1rem;">Loading items...</td></tr>';
+
+            try {
+                const res = await apiCall(`/api/payment/details/${orderId}`);
+                if (res.ok && res.data.items) {
+                    itemsTbody.innerHTML = '';
+                    res.data.items.forEach(item => {
+                        itemsTbody.innerHTML += `
+                            <tr>
+                                <td>${item.english_name}</td>
+                                <td style="text-align: center;">${item.quantity}</td>
+                                <td style="text-align: right;">₹${item.price_at_time * item.quantity}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    itemsTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red; padding:1rem;">Failed to load items.</td></tr>';
+                }
+            } catch (err) {
+                itemsTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red; padding:1rem;">Error loading items.</td></tr>';
+            }
+
+            document.getElementById('paymentDetailsModal').style.display = 'flex';
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('paymentDetailsModal').style.display = 'none';
+        }
+
+        async function printReceipt(orderId) {
+            try {
+                const res = await apiCall(`/api/billing/invoice/${orderId}`);
+                if (res.ok) {
+                    window.open(res.data.url, '_blank');
+                } else {
+                    alert('Failed to generate PDF receipt.');
+                }
+            } catch (e) {
+                alert('Network error while generating receipt.');
+            }
+        }
+
+        // Attendance / other original handlers
         async function handleAttendance(type) {
             try {
                 const method = type === 'clock-in' ? 'POST' : 'PUT';
