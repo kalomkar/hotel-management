@@ -2,11 +2,18 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const pool = require('../database/db');
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpayInstance = null;
+function getRazorpay() {
+    if (!razorpayInstance) {
+        const key_id = process.env.RAZORPAY_KEY_ID;
+        const key_secret = process.env.RAZORPAY_KEY_SECRET;
+        if (!key_id || !key_secret) {
+            throw new Error('Razorpay API keys are missing. Please configure RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
+        }
+        razorpayInstance = new Razorpay({ key_id, key_secret });
+    }
+    return razorpayInstance;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // @route   POST /api/payment/create-order
@@ -44,7 +51,7 @@ exports.createRazorpayOrder = async (req, res) => {
         await connection.commit();
 
         // 3. Create Razorpay order (amount in paise = amount × 100)
-        const razorpayOrder = await razorpay.orders.create({
+        const razorpayOrder = await getRazorpay().orders.create({
             amount: Math.round(total_amount * 100),
             currency: 'INR',
             receipt: `receipt_order_${orderId}`,
